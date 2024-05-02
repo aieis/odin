@@ -3,8 +3,20 @@ package launcher
 import "core:fmt"
 import "core:os"
 
-import SDL "vendor:sdl2"
-import gl "vendor:OpenGL"
+import raylib "vendor:raylib"
+
+WINDOW_WIDTH :: 900
+WINDOW_HEIGHT :: 600
+WINDOW_TITLE :: "Odin Launcher"
+WINDOW_MARGINS :: 50
+WINDOW_INNER_WIDTH :: WINDOW_WIDTH - WINDOW_MARGINS * 2
+WINDOW_INNER_HEIGHT :: WINDOW_HEIGHT - WINDOW_MARGINS * 2
+
+PROG_WIDTH :: 100
+PROG_HEIGHT :: 100
+PROG_MARGIN :: 5
+PROG_INNER_WIDTH :: PROG_WIDTH - PROG_MARGIN * 2
+PROG_INNER_HEIGHT :: PROG_HEIGHT - PROG_MARGIN * 2
 
 main :: proc() {
     progs, err := find_progs(Prog_Dir)
@@ -15,35 +27,44 @@ main :: proc() {
     }
 
     defer prog_list_delete(progs)
-         
-    prog_list_print(progs)
 
-    window := SDL.CreateWindow("Odin Launcher", SDL.WINDOWPOS_UNDEFINED, SDL.WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, {.OPENGL})
-    if window == nil {
-        fmt.eprintln("Failed to create window.")
-        return;
-    }
+    raylib.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
+    defer raylib.CloseWindow()
 
-    defer SDL.DestroyWindow(window)
+    cols :: WINDOW_INNER_WIDTH / PROG_WIDTH
 
-    gl_context := SDL.GL_CreateContext(window)
-    SDL.GL_MakeCurrent(window, gl_context)
-    gl.load_up_to(3, 3, SDL.gl_set_proc_address)
+    cols_rem := len(progs) % cols
+    rows := len(progs) / cols + (1 if cols_rem > 0 else 0)
+    
+    x_offset :: (WINDOW_INNER_WIDTH - cols * PROG_WIDTH) / 2 + WINDOW_MARGINS
+    y_offset := (WINDOW_INNER_HEIGHT - rows * PROG_HEIGHT) / 2 + WINDOW_MARGINS
 
+    x_final_offset := (WINDOW_INNER_WIDTH -  cols_rem * PROG_WIDTH) / 2 + WINDOW_MARGINS
+    
+    
     loop : for {
-        event : SDL.Event
-        for SDL.PollEvent(&event) {
-            #partial switch event.type {
-                case .KEYDOWN:
-                #partial switch event.key.keysym.sym {
-                    case .ESCAPE: break loop
-                }
-                case .QUIT: break loop
-            }
+        if raylib.WindowShouldClose() {
+            break loop
         }
 
-        gl.ClearColor(0.6, 0.2, 0.4, 0.8)
-        gl.Clear(gl.COLOR_BUFFER_BIT)
-        SDL.GL_SwapWindow(window)
+        raylib.BeginDrawing()
+        {
+            raylib.ClearBackground(raylib.GRAY)
+            for prog, i in progs {
+                row := i % cols
+                x : f32 = cast(f32) row * PROG_WIDTH + cast(f32) (x_offset if row != cols_rem else x_final_offset)
+                y : f32 = cast(f32) (i / cols) * PROG_HEIGHT + cast(f32) y_offset
+                
+                rec := raylib.Rectangle {
+                    x + PROG_MARGIN,
+                    y + PROG_MARGIN,
+                    PROG_INNER_WIDTH,
+                    PROG_INNER_HEIGHT
+                }
+
+                raylib.DrawRectangleRoundedLines(rec, 0.01, 1, -1, raylib.LIGHTGRAY)
+            }
+        }
+        raylib.EndDrawing()
     }
 }

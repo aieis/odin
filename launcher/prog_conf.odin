@@ -4,17 +4,6 @@ import "core:os"
 import "core:fmt"
 import "core:strings"
 
-Prog_Var_Dst :: "/Content/Configs/"
-Prog_Var_Src :: "/Configs/"
-
-Prog_Dir :: "/artworks"
-Target_Ext :: ".sh"
-Target_Ext_Len :: len(Target_Ext)
-
-WINDOW_WIDTH :: 900
-WINDOW_HEIGHT :: 600
-WINDOW_TITLE :: "Odin Launcher"
-
 File_Copy :: struct {
     src: string,
     dst: string
