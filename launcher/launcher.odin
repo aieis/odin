@@ -14,7 +14,7 @@ WINDOW_INNER_HEIGHT :: WINDOW_HEIGHT - WINDOW_MARGINS * 2
 
 PROG_WIDTH :: 100
 PROG_HEIGHT :: 100
-PROG_MARGIN :: 5
+PROG_MARGIN :: 10
 PROG_INNER_WIDTH :: PROG_WIDTH - PROG_MARGIN * 2
 PROG_INNER_HEIGHT :: PROG_HEIGHT - PROG_MARGIN * 2
 
@@ -41,7 +41,6 @@ main :: proc() {
 
     x_final_offset := (WINDOW_INNER_WIDTH -  cols_rem * PROG_WIDTH) / 2 + WINDOW_MARGINS
     
-    
     loop : for {
         if raylib.WindowShouldClose() {
             break loop
@@ -51,9 +50,10 @@ main :: proc() {
         {
             raylib.ClearBackground(raylib.GRAY)
             for prog, i in progs {
-                row := i % cols
-                x : f32 = cast(f32) row * PROG_WIDTH + cast(f32) (x_offset if row != cols_rem else x_final_offset)
-                y : f32 = cast(f32) (i / cols) * PROG_HEIGHT + cast(f32) y_offset
+                col := i % cols
+                row := i / cols
+                x : f32 = cast(f32) col * PROG_WIDTH + cast(f32) (x_offset if row < rows-1 else x_final_offset)
+                y : f32 = cast(f32) row * PROG_HEIGHT + cast(f32) y_offset
                 
                 rec := raylib.Rectangle {
                     x + PROG_MARGIN,
@@ -62,7 +62,7 @@ main :: proc() {
                     PROG_INNER_HEIGHT
                 }
 
-                raylib.DrawRectangleRoundedLines(rec, 0.01, 1, -1, raylib.LIGHTGRAY)
+                raylib.DrawRectangleRoundedLines(rec, 0.01, 1, 3, raylib.RED)
             }
         }
         raylib.EndDrawing()

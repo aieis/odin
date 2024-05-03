@@ -1,0 +1,6 @@
+(setq-default aieis/--odin-dir "~/source/Odin")
+(let ((nexec-path exec-path))
+  (unless (seq-contains-p nexec-path aieis/--odin-dir)
+    (message "exec-path does not contain %s" aieis/--odin-dir)
+    (add-to-list 'nexec-path aieis/--odin-dir)
+    (setq exec-path nexec-path)))  
