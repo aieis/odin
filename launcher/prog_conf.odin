@@ -67,7 +67,7 @@ prog_conf_delete :: proc(pc : Prog_Conf) {
 
 prog_eligible :: proc(dirinfo: os.File_Info) -> (file: os.File_Info, succ: bool) {
     succ = false
-    
+
     fd : os.Handle
     err : os.Errno
     fd, err = os.open(dirinfo.fullpath)
@@ -84,7 +84,7 @@ prog_eligible :: proc(dirinfo: os.File_Info) -> (file: os.File_Info, succ: bool)
     }
 
     defer dirlist_delete(files)
-    
+
     for file in files {
         size := len(file.name)
 
@@ -95,7 +95,7 @@ prog_eligible :: proc(dirinfo: os.File_Info) -> (file: os.File_Info, succ: bool)
         if file.name[size - Target_Ext_Len:size] == Target_Ext {
             using file
             nfullpath := strings.clone(fullpath)
-            nname := basename(fullpath) 
+            nname := basename(fullpath)
             fc := os.File_Info {
                 nfullpath,
                 nname,
@@ -108,7 +108,7 @@ prog_eligible :: proc(dirinfo: os.File_Info) -> (file: os.File_Info, succ: bool)
             }
 
             return fc, true
-        }    
+        }
     }
 
     return
@@ -125,7 +125,7 @@ prog_conf_collect :: proc(prog : Prog_Data) -> []Prog_Conf {
     sarr := [?]string {prog.path, Prog_Var_Src}
     vardir := strings.concatenate(sarr[:])
     defer delete(vardir)
-    
+
     if !os.is_dir(vardir) {
         append(&progs, defprog)
         return progs[:]
@@ -138,7 +138,7 @@ prog_conf_collect :: proc(prog : Prog_Data) -> []Prog_Conf {
     }
 
     defer os.close(fd)
-    
+
     dirs : []os.File_Info
     dirs, err = os.read_dir(fd, 0)
     if err != os.ERROR_NONE {
@@ -153,7 +153,7 @@ prog_conf_collect :: proc(prog : Prog_Data) -> []Prog_Conf {
     sarr2 := [?]string {prog.path, Prog_Var_Dst}
     dstroot := strings.concatenate(sarr2[:])
     defer delete(dstroot)
-    
+
     for dir in dirs {
         if !dir.is_dir {
             continue
@@ -164,7 +164,7 @@ prog_conf_collect :: proc(prog : Prog_Data) -> []Prog_Conf {
             continue
         }
         defer os.close(nfd)
-        
+
         files : []os.File_Info
         files, err = os.read_dir(nfd, 0)
         defer dirlist_delete(files)
@@ -191,7 +191,7 @@ prog_conf_collect :: proc(prog : Prog_Data) -> []Prog_Conf {
     }
 
     if len(progs) == 0 {
-        append(&progs, defprog)    
+        append(&progs, defprog)
     }
 
     return progs[:]
@@ -199,7 +199,7 @@ prog_conf_collect :: proc(prog : Prog_Data) -> []Prog_Conf {
 
 find_progs :: proc(dirpath : string) -> (pd: []Prog_Conf, err: os.Errno){
     fd : os.Handle
-    
+
     fd, err = os.open(dirpath)
     if err != os.ERROR_NONE {
         return
@@ -236,7 +236,7 @@ find_progs :: proc(dirpath : string) -> (pd: []Prog_Conf, err: os.Errno){
 
         confs := prog_conf_collect(pd_)
         defer delete(confs)
-        
+
         for conf in confs { append(&valid_progs, conf) }
     }
 
@@ -250,22 +250,26 @@ prog_list_delete :: proc(progs : []Prog_Conf) {
     delete(progs)
 }
 
+prog_conf_print :: proc(prog : Prog_Conf) {
+    fmt.printf("Application \"%v\":\n", prog.conf_name)
+    fmt.printf("Root Name: %v\n", prog.name)
+    fmt.printf("Root Path: %v\n", prog.path)
+    fmt.printf("Application name: %v\n", prog.app_name)
+    fmt.printf("Application Path: %v\n", prog.app_path)
+
+    if len(prog.file_copy) > 0 {
+        fmt.printf("Var files:\n")
+        for fc in prog.file_copy {
+            fmt.printf("\t\"%v\" => \"%v\"\n", fc.src, fc.dst)
+        }
+        fmt.println("EOL")
+    }
+
+}
+
 prog_list_print :: proc(progs : []Prog_Conf) {
     for prog in progs {
-        fmt.printf("Application \"%v\":\n", prog.conf_name)
-        fmt.printf("Root Name: %v\n", prog.name)
-        fmt.printf("Root Path: %v\n", prog.path)    
-        fmt.printf("Application name: %v\n", prog.app_name)
-        fmt.printf("Application Path: %v\n", prog.app_path)
-
-        if len(prog.file_copy) > 0 {
-            fmt.printf("Var files:\n")
-            for fc in prog.file_copy {
-                fmt.printf("\t\"%v\" => \"%v\"\n", fc.src, fc.dst)
-            }
-            fmt.println("EOL")
-        }
-        
+        prog_conf_print(prog)
         fmt.println()
     }
 }
